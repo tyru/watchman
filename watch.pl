@@ -66,16 +66,13 @@ sub get_dat {
 sub get_urls_from_body {
     my ($body) = @_;
 
+    # FIXME
+    # Don't create URI::Find instance each time.
+
     my @image_url;
     my $finder = URI::Find->new(sub { push @image_url, @_ });
     $finder->find(\$body);
     @image_url;
-    # my @image_url;
-    # while ($body =~ s{.*? (http:// [^ ]+ \. (?:jpg | png)) (.*)}{$2}i) {
-    #     push @image_url, $1;
-    #     warn "found image url:$1";
-    # }
-    # @image_url;
 }
 
 sub get_images_from_body {
