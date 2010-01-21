@@ -75,30 +75,6 @@ sub get_urls_from_body {
     @image_url;
 }
 
-sub get_images_from_body {
-    my ($ua, $body) = @_;
-
-    my $i = 1;
-    for my $url (get_urls_from_body($body)) {
-        warn sprintf "url %d: %s\n", $i++, $url;
-
-        my $res = $ua->get($url);
-        unless ($res->is_success) {
-            warn "GET $url: failed.\n";
-            next;
-        }
-
-        # tail path as filename.
-        my $filename = (split m{/}, $url)[-1];
-        my $FH = FileHandle->new($filename, 'w') or do {
-            warn "$filename: file open failed.\n";
-            next;
-        };
-        binmode $FH;
-        $FH->print($res->content);
-    }
-}
-
 
 ### main ###
 my $down_dir = 'down';
@@ -131,10 +107,29 @@ my $o = WWW::2ch->new(
 );
 
 my $dat = $o->parse_dat($dat_response->content);
-my $i = 1;
+my $i = my $j = 1;
 for my $res ($dat->reslist) {
     warn sprintf "res %d: %s\n", $i++, $res->body_text;
-    get_images_from_body($ua, $res->body_text);
+
+    for my $url (get_urls_from_body($res->body_text)) {
+        warn sprintf "url %d: %s\n", $j++, $url;
+
+        my $res = $ua->get($url);
+        unless ($res->is_success) {
+            warn "GET $url: failed.\n";
+            next;
+        }
+
+        # tail path as filename.
+        my $filename = (split m{/}, $url)[-1];
+        $filename = catfile($down_dir, $filename);
+        my $FH = FileHandle->new($filename, 'w') or do {
+            warn "$filename: file open failed.\n";
+            next;
+        };
+        binmode $FH;
+        $FH->print($res->content);
+    }
 }
 __END__
 
