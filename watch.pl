@@ -97,22 +97,25 @@ sub get_urls_from_body {
 
 ### main ###
 my $down_dir = 'down';
-my $needhelp;
 my $user_agent = 'Mozilla/5.0';
 my $log_file;
 my $log_remove_old;
 my $log_quiet;
 my $overwrite;
-GetOptions(
-    'd|down-dir=s' => \$down_dir,
-    'h|help|?' => \$needhelp,
-    'u|user-agent=s' => \$user_agent,
-    'l|log-file=s' => \$log_file,
-    'r|remove-old-log' => \$log_remove_old,
-    'q|quiet' => \$log_quiet,
-    'f|force' => \$overwrite,
-) or usage;
-usage   if $needhelp;
+
+{
+    my $needhelp;
+    GetOptions(
+        'h|help|?' => \$needhelp,
+        'd|down-dir=s' => \$down_dir,
+        'u|user-agent=s' => \$user_agent,
+        'l|log-file=s' => \$log_file,
+        'r|remove-old-log' => \$log_remove_old,
+        'q|quiet' => \$log_quiet,
+        'f|force' => \$overwrite,
+    ) or usage;
+    usage   if $needhelp;
+}
 
 
 my $url = shift
