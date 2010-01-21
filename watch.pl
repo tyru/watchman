@@ -110,7 +110,7 @@ my $log_file;
 my $log_rewrite_old;
 my $log_quiet;
 my $overwrite;
-my $dat_file;
+my $dat_file = './cache.dat';
 
 {
     my $needhelp;
@@ -142,7 +142,9 @@ $ua->agent($user_agent);
 if (defined $log_file) {
     log_setfile($log_file, $log_rewrite_old ? 'w' : 'a');
 }
-log_set_quiet_flag($log_quiet);
+if ($log_quiet) {
+    log_set_quiet_flag(1);
+}
 
 
 # Get dat data's response.
@@ -160,11 +162,9 @@ my $dat_data = do {
 
 # Get 2ch res's list.
 my @reslist = do {
-    my $tempdir = '/tmp/XXX';
     my $o = WWW::2ch->new(
         url => $url,
-        # TODO
-        # cache => catfile(mktemp($tempdir), ''),
+        cache => $dat_file,
     );
 
     my $dat = $o->parse_dat($dat_data);
