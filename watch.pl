@@ -50,58 +50,55 @@ sub get_dat_url {
     $url;
 }
 
-{
+sub get_dat {
+    my ($ua, $url) = @_;
 
-    sub get_dat {
-        my ($ua, $url) = @_;
+    my $dat_url = get_dat_url($url);
+    warn $dat_url;
 
-        my $dat_url = get_dat_url($url);
-        warn $dat_url;
+    my $res = $ua->get($dat_url);
+    unless ($res->is_success) {
+        die "GET $dat_url: failed.\n";
+    }
+    $res;
+}
 
-        my $res = $ua->get($dat_url);
+sub get_urls_from_body {
+    my ($body) = @_;
+
+    my @image_url;
+    my $finder = URI::Find->new(sub { push @image_url, @_ });
+    $finder->find(\$body);
+    @image_url;
+    # my @image_url;
+    # while ($body =~ s{.*? (http:// [^ ]+ \. (?:jpg | png)) (.*)}{$2}i) {
+    #     push @image_url, $1;
+    #     warn "found image url:$1";
+    # }
+    # @image_url;
+}
+
+sub get_images_from_body {
+    my ($ua, $body) = @_;
+
+    my $i = 1;
+    for my $url (get_urls_from_body($body)) {
+        warn sprintf "url %d: %s\n", $i++, $url;
+
+        my $res = $ua->get($url);
         unless ($res->is_success) {
-            die "GET $dat_url: failed.\n";
+            warn "GET $url: failed.\n";
+            next;
         }
-        $res;
-    }
 
-    sub get_urls_from_body {
-        my ($body) = @_;
-
-        my @image_url;
-        my $finder = URI::Find->new(sub { push @image_url, @_ });
-        $finder->find(\$body);
-        @image_url;
-        # my @image_url;
-        # while ($body =~ s{.*? (http:// [^ ]+ \. (?:jpg | png)) (.*)}{$2}i) {
-        #     push @image_url, $1;
-        #     warn "found image url:$1";
-        # }
-        # @image_url;
-    }
-
-    sub get_images_from_body {
-        my ($ua, $body) = @_;
-
-        my $i = 1;
-        for my $url (get_urls_from_body($body)) {
-            warn sprintf "url %d: %s\n", $i++, $url;
-
-            my $res = $ua->get($url);
-            unless ($res->is_success) {
-                warn "GET $url: failed.\n";
-                next;
-            }
-
-            # tail path as filename.
-            my $filename = (split m{/}, $url)[-1];
-            my $FH = FileHandle->new($filename, 'w') or do {
-                warn "$filename: file open failed.\n";
-                next;
-            };
-            binmode $FH;
-            $FH->print($res->content);
-        }
+        # tail path as filename.
+        my $filename = (split m{/}, $url)[-1];
+        my $FH = FileHandle->new($filename, 'w') or do {
+            warn "$filename: file open failed.\n";
+            next;
+        };
+        binmode $FH;
+        $FH->print($res->content);
     }
 }
 
