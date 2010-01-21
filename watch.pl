@@ -109,8 +109,10 @@ sub get_dat_url {
 
 
 ### main ###
-my ($needhelp);
+my $down_dir = 'down';
+my $needhelp;
 GetOptions(
+    'd|down-dir=s' => \$down_dir,
     'help' => \$needhelp,
 ) or usage;
 usage   if $needhelp;
@@ -120,6 +122,7 @@ my $url = shift
     || 'http://yutori7.2ch.net/test/read.cgi/news4vip/1263878512/'
     || usage;
 
+mkdir $down_dir;
 my $dat_response = get_dat($url);
 
 my $tempdir = '/tmp/XXX';
