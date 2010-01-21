@@ -90,10 +90,14 @@ sub get_urls_from_body {
 my $down_dir = 'down';
 my $needhelp;
 my $user_agent = 'Mozilla/5.0';
+my $logfile;
+my $log_remove_old;
 GetOptions(
     'd|down-dir=s' => \$down_dir,
     'help' => \$needhelp,
     'u|user-agent=s' => \$user_agent,
+    'l|log-file=s' => \$logfile,
+    'r|remove-old-log' => \$log_remove_old,
 ) or usage;
 usage   if $needhelp;
 
@@ -104,8 +108,13 @@ my $url = shift
 
 # Setup
 mkdir $down_dir;
+
 my $ua = LWP::UserAgent->new;
 $ua->agent($user_agent);
+
+if (defined $logfile) {
+    set_logfile($logfile, $log_remove_old ? 'w' : 'a');
+}
 
 
 # Get dat data's response.
