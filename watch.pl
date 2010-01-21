@@ -78,7 +78,7 @@ sub d {
 
 sub get_ita_dat {
     my ($url) = @_;
-    $url =~ m{/test/read.cgi/([^/]+)/([^/]+)/};
+    $url =~ m{/test/read\.cgi/([^/]+)/([^/]+)/};
     ($1, $2);
 }
 
