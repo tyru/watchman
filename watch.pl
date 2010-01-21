@@ -24,9 +24,6 @@ use FileHandle;
 # - datはShift JIS
 #   - URL抜き出すだけだったら別に考慮しなくてもいいけど
 # - 設定ファイルからオプションを取得
-#   - デフォルトのオプション
-#   - 設定ファイル
-#   - 引数
 # - Pod書く
 
 
@@ -121,6 +118,11 @@ my $dat_file = './cache.dat';
 my $support_utf8_url;
 
 {
+    # Build option values as follows:
+    # - Default
+    # - Config file
+    # - Arguments
+
     my $needhelp;
     GetOptions(
         'h|help|?' => \$needhelp,
