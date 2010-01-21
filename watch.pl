@@ -41,7 +41,7 @@ sub d {
     my $logfile;
     my $LOG;
 
-    sub log {
+    sub d_log {
         return unless defined $LOG;
         $LOG->print(@_);
     }
