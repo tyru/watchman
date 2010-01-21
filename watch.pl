@@ -38,22 +38,27 @@ sub d {
 
 # Logger.
 {
-    my $logfile;
+    my $log_quiet;
     my $LOG;
 
     sub log_out {
         return unless defined $LOG;
         $LOG->print(@_);
+        print @_ unless $log_quiet;
     }
 
     sub log_setfile {
-        my ($logfile, $mode) = @_;
-        return unless defined $logfile;
+        my ($filename, $mode) = @_;
+        return unless defined $filename;
 
-        $LOG = FileHandle->new($logfile, $mode) or do {
-            log_out "can't open '$logfile' as log file!:$!\n";
+        $LOG = FileHandle->new($filename, $mode) or do {
+            log_out "can't open '$filename' as log file!:$!\n";
             return;
         };
+    }
+
+    sub log_set_quiet_flag {
+        $log_quiet = shift;
     }
 }
 
@@ -90,14 +95,16 @@ sub get_urls_from_body {
 my $down_dir = 'down';
 my $needhelp;
 my $user_agent = 'Mozilla/5.0';
-my $logfile;
+my $log_file;
 my $log_remove_old;
+my $log_quiet;
 GetOptions(
     'd|down-dir=s' => \$down_dir,
     'help' => \$needhelp,
     'u|user-agent=s' => \$user_agent,
-    'l|log-file=s' => \$logfile,
+    'l|log-file=s' => \$log_file,
     'r|remove-old-log' => \$log_remove_old,
+    'q|quiet' => \$log_quiet,
 ) or usage;
 usage   if $needhelp;
 
@@ -106,15 +113,17 @@ my $url = shift
     || 'http://yutori7.2ch.net/test/read.cgi/news4vip/1263878512/'
     || usage;
 
+
 # Setup
 mkdir $down_dir;
 
 my $ua = LWP::UserAgent->new;
 $ua->agent($user_agent);
 
-if (defined $logfile) {
-    log_setfile($logfile, $log_remove_old ? 'w' : 'a');
+if (defined $log_file) {
+    log_setfile($log_file, $log_remove_old ? 'w' : 'a');
 }
+log_set_quiet_flag($log_quiet);
 
 
 # Get dat data's response.
