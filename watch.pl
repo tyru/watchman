@@ -34,6 +34,31 @@ sub d {
     Data::Dumper::Dumper(@_);
 }
 
+
+
+# Logger.
+{
+    my $logfile;
+    my $LOG;
+
+    sub log {
+        return unless defined $LOG;
+        $LOG->print(@_);
+    }
+
+    sub set_logfile {
+        my ($logfile, $mode) = @_;
+        return unless defined $logfile;
+
+        $LOG = FileHandle->new($logfile, $mode) or do {
+            warn "can't open '$logfile' as log file!:$!\n";
+            return;
+        };
+    }
+}
+
+
+
 sub get_ita_dat {
     my ($url) = @_;
     $url =~ m{/test/read.cgi/([^/]+)/([^/]+)/};
