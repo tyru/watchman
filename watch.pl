@@ -51,11 +51,9 @@ sub get_dat_url {
 }
 
 {
-    my $ua = LWP::UserAgent->new;
-    $ua->agent('Mozilla/5.0');
 
     sub get_dat {
-        my ($url) = @_;
+        my ($ua, $url) = @_;
 
         my $dat_url = get_dat_url($url);
         warn $dat_url;
@@ -83,7 +81,7 @@ sub get_dat_url {
     }
 
     sub get_images_from_body {
-        my ($body) = @_;
+        my ($ua, $body) = @_;
 
         my $i = 1;
         for my $url (get_urls_from_body($body)) {
@@ -111,9 +109,11 @@ sub get_dat_url {
 ### main ###
 my $down_dir = 'down';
 my $needhelp;
+my $user_agent = 'Mozilla/5.0';
 GetOptions(
     'd|down-dir=s' => \$down_dir,
     'help' => \$needhelp,
+    'u|user-agent=s' => \$user_agent,
 ) or usage;
 usage   if $needhelp;
 
@@ -122,8 +122,12 @@ my $url = shift
     || 'http://yutori7.2ch.net/test/read.cgi/news4vip/1263878512/'
     || usage;
 
+# Setup
 mkdir $down_dir;
-my $dat_response = get_dat($url);
+my $ua = LWP::UserAgent->new;
+$ua->agent($user_agent);
+
+my $dat_response = get_dat($ua, $url);
 
 my $tempdir = '/tmp/XXX';
 my $o = WWW::2ch->new(
@@ -136,7 +140,7 @@ my $dat = $o->parse_dat($dat_response->content);
 my $i = 1;
 for my $res ($dat->reslist) {
     warn sprintf "res %d: %s\n", $i++, $res->body_text;
-    get_images_from_body($res->body_text);
+    get_images_from_body($ua, $res->body_text);
 }
 __END__
 
