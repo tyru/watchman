@@ -91,13 +91,21 @@ sub get_dat_url {
 }
 
 sub get_urls_from_body {
-    my ($body) = @_;
+    my ($body, $support_utf8_url) = @_;
 
     # FIXME
     # Don't create URI::Find instance each time.
 
     my @image_url;
-    my $finder = URI::Find->new(sub { push @image_url, @_ });
+    my $finder = do {
+        if ($support_utf8_url) {
+            require URI::Find::UTF8;
+            URI::Find::UTF8->new(sub { push @image_url, shift });
+        }
+        else {
+            URI::Find->new(sub { push @image_url, shift });
+        }
+    };
     $finder->find(\$body);
     @image_url;
 }
@@ -111,6 +119,7 @@ my $log_rewrite_old;
 my $log_quiet;
 my $overwrite;
 my $dat_file = './cache.dat';
+my $support_utf8_url;
 
 {
     my $needhelp;
@@ -123,6 +132,7 @@ my $dat_file = './cache.dat';
         'q|quiet' => \$log_quiet,
         'f|force' => \$overwrite,
         'd|dat-file=s' => \$dat_file,
+        'utf8-url' => \$support_utf8_url,
     ) or usage;
     usage   if $needhelp;
 }
@@ -181,7 +191,7 @@ my $i = my $j = 1;
 for my $res (@reslist) {
     log_out sprintf "res %d: %s", $i++, $res->body_text;
 
-    for my $url (get_urls_from_body($res->body_text)) {
+    for my $url (get_urls_from_body($res->body_text, $support_utf8_url)) {
         log_out sprintf "url %d: %s", $j++, $url;
 
         my $res = $ua->get($url);
