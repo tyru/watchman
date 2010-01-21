@@ -11,6 +11,15 @@ use File::Spec::Functions qw(catfile);
 use LWP::UserAgent;
 use URI::Find;
 
+# TODO
+# - オプション
+#   - user agent
+#   - 保存用ディレクトリ
+#   - datをチェックしにいく間隔
+#   - URI::Findを使うか、URI::Find::UTF8を使うか
+# - 正規表現をもっとちゃんとする
+# - datはShift JIS
+#   - URL抜き出すだけだったら別に考慮しなくてもいいけど
 
 
 ### sub ###
@@ -104,6 +113,7 @@ sub watch {
     my $tempdir = '/tmp/XXX';
     my $o = WWW::2ch->new(
         url => $url,
+        # TODO
         # cache => catfile(mktemp($tempdir), ''),
     );
 
