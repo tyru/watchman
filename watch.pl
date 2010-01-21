@@ -98,6 +98,7 @@ my $user_agent = 'Mozilla/5.0';
 my $log_file;
 my $log_remove_old;
 my $log_quiet;
+my $overwrite;
 GetOptions(
     'd|down-dir=s' => \$down_dir,
     'h|help|?' => \$needhelp,
@@ -105,6 +106,7 @@ GetOptions(
     'l|log-file=s' => \$log_file,
     'r|remove-old-log' => \$log_remove_old,
     'q|quiet' => \$log_quiet,
+    'f|force' => \$overwrite,
 ) or usage;
 usage   if $needhelp;
 
@@ -167,9 +169,17 @@ for my $res (@reslist) {
             next;
         }
 
-        # tail path as filename.
-        my $filename = (split m{/}, $url)[-1];
-        $filename = catfile($down_dir, $filename);
+        # URL tail path as filename.
+        my $filename = do {
+            my $f = (split m{/}, $url)[-1];
+            catfile($down_dir, $f);
+        };
+
+        if (-f $filename && !$overwrite) {
+            log_out "'$filename' already exists.\n";
+            next;
+        }
+
         my $FH = FileHandle->new($filename, 'w') or do {
             log_out "$filename: file open failed.\n";
             next;
