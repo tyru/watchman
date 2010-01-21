@@ -17,6 +17,7 @@ use URI::Find;
 #   - 保存用ディレクトリ
 #   - datをチェックしにいく間隔
 #   - URI::Findを使うか、URI::Find::UTF8を使うか
+#   - ログファイル
 # - 正規表現をもっとちゃんとする
 # - datはShift JIS
 #   - URL抜き出すだけだったら別に考慮しなくてもいいけど
@@ -106,25 +107,6 @@ sub get_dat_url {
     }
 }
 
-sub watch {
-    my ($url) = @_;
-    my $dat_response = get_dat($url);
-
-    my $tempdir = '/tmp/XXX';
-    my $o = WWW::2ch->new(
-        url => $url,
-        # TODO
-        # cache => catfile(mktemp($tempdir), ''),
-    );
-
-    my $dat = $o->parse_dat($dat_response->content);
-    my $i = 1;
-    for my $res ($dat->reslist) {
-        warn sprintf "res %d: %s\n", $i++, $res->body_text;
-        get_images_from_body($res->body_text);
-    }
-}
-
 
 ### main ###
 my ($needhelp);
@@ -134,11 +116,25 @@ GetOptions(
 usage   if $needhelp;
 
 
-watch(
-    shift
-    or 'http://yutori7.2ch.net/test/read.cgi/news4vip/1263878512/'
-    or usage
+my $url = shift
+    || 'http://yutori7.2ch.net/test/read.cgi/news4vip/1263878512/'
+    || usage;
+
+my $dat_response = get_dat($url);
+
+my $tempdir = '/tmp/XXX';
+my $o = WWW::2ch->new(
+    url => $url,
+    # TODO
+    # cache => catfile(mktemp($tempdir), ''),
 );
+
+my $dat = $o->parse_dat($dat_response->content);
+my $i = 1;
+for my $res ($dat->reslist) {
+    warn sprintf "res %d: %s\n", $i++, $res->body_text;
+    get_images_from_body($res->body_text);
+}
 __END__
 
 =head1 NAME
