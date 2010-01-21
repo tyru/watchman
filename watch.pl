@@ -138,9 +138,7 @@ my $support_utf8_url;
 }
 
 
-my $url = shift
-    || 'http://yutori7.2ch.net/test/read.cgi/news4vip/1263878512/'
-    || usage;
+my $url = shift || usage;
 
 
 # Setup
