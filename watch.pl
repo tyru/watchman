@@ -47,12 +47,16 @@ sub d {
         print(@_, "\n") unless $log_quiet;
     }
 
+    sub log_error {
+        log_out "[error]::", @_;
+    }
+
     sub log_setfile {
         my ($filename, $mode) = @_;
         return unless defined $filename;
 
         $LOG = FileHandle->new($filename, $mode) or do {
-            log_out "can't open '$filename' as log file!:$!";
+            log_error "can't open '$filename' as log file!:$!";
             return;
         };
     }
@@ -165,7 +169,7 @@ for my $res (@reslist) {
 
         my $res = $ua->get($url);
         unless ($res->is_success) {
-            log_out "GET $url: failed.";
+            log_error "GET $url: failed.";
             next;
         }
 
@@ -176,12 +180,12 @@ for my $res (@reslist) {
         };
 
         if (-f $filename && !$overwrite) {
-            log_out "'$filename' already exists.";
+            log_error "'$filename' already exists.";
             next;
         }
 
         my $FH = FileHandle->new($filename, 'w') or do {
-            log_out "$filename: file open failed.";
+            log_error "$filename: file open failed.";
             next;
         };
         binmode $FH;
