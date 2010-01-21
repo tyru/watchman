@@ -106,20 +106,22 @@ sub get_urls_from_body {
 my $down_dir = 'down';
 my $user_agent = 'Mozilla/5.0';
 my $log_file;
-my $log_remove_old;
+my $log_rewrite_old;
 my $log_quiet;
 my $overwrite;
+my $dat_file;
 
 {
     my $needhelp;
     GetOptions(
         'h|help|?' => \$needhelp,
-        'd|down-dir=s' => \$down_dir,
+        'o|down-dir=s' => \$down_dir,
         'u|user-agent=s' => \$user_agent,
         'l|log-file=s' => \$log_file,
-        'r|remove-old-log' => \$log_remove_old,
+        'r|rewrite-old-log' => \$log_rewrite_old,
         'q|quiet' => \$log_quiet,
         'f|force' => \$overwrite,
+        'd|dat-file=s' => \$dat_file,
     ) or usage;
     usage   if $needhelp;
 }
@@ -137,7 +139,7 @@ my $ua = LWP::UserAgent->new;
 $ua->agent($user_agent);
 
 if (defined $log_file) {
-    log_setfile($log_file, $log_remove_old ? 'w' : 'a');
+    log_setfile($log_file, $log_rewrite_old ? 'w' : 'a');
 }
 log_set_quiet_flag($log_quiet);
 
