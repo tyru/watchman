@@ -7,7 +7,7 @@ use Getopt::Long;
 use Pod::Usage;
 use WWW::2ch;
 use URI;
-use File::Spec::Functions qw(catfile);
+use File::Spec::Functions qw(catfile devnull);
 use LWP::UserAgent;
 use URI::Find;
 use IO::Handle;
@@ -48,31 +48,29 @@ sub d {
 
 # Logger.
 {
-    my $log_quiet;
     my $LOG;
 
     sub log_out {
         return unless defined $LOG;
         $LOG->print(@_, "\n");
-        print(@_, "\n") unless $log_quiet;
     }
 
     sub log_error {
         log_out "[error]::", @_;
     }
 
-    sub log_setfile {
-        my ($filename, $mode) = @_;
-        return unless defined $filename;
-
-        $LOG = FileHandle->new($filename, $mode) or do {
-            log_error "can't open '$filename' as log file!:$!";
-            return;
-        };
+    sub log_set_fh {
+        $LOG = shift;
     }
 
-    sub log_set_quiet_flag {
-        $log_quiet = shift;
+    sub log_set_path {
+        my ($filename, $mode) = @_;
+
+        my $fh = FileHandle->new($filename, $mode) or do {
+            warn "can't open '$filename' as log file!:$!";
+            return;
+        };
+        log_set_fh $fh;
     }
 }
 
@@ -142,10 +140,14 @@ my $ua = LWP::UserAgent->new;
 $ua->agent($user_agent);
 
 if (defined $log_file) {
-    log_setfile($log_file, $log_rewrite_old ? 'w' : 'a');
+    log_set_path($log_file, $log_rewrite_old ? 'w' : 'a');
 }
+else {
+    log_set_fh(\*STDOUT);
+}
+
 if ($log_quiet) {
-    log_set_quiet_flag(1);
+    log_set_path(devnull, $log_rewrite_old ? 'w' : 'a');
 }
 
 
