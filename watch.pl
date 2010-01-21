@@ -51,7 +51,7 @@ sub d {
         return unless defined $logfile;
 
         $LOG = FileHandle->new($logfile, $mode) or do {
-            warn "can't open '$logfile' as log file!:$!\n";
+            d_log "can't open '$logfile' as log file!:$!\n";
             return;
         };
     }
@@ -120,7 +120,7 @@ if (defined $logfile) {
 # Get dat data's response.
 my $dat_data = do {
     my $dat_url = get_dat_url($url);
-    warn $dat_url;
+    d_log $dat_url;
 
     my $res = $ua->get($dat_url);
     unless ($res->is_success) {
@@ -147,14 +147,14 @@ my @reslist = do {
 # Save images.
 my $i = my $j = 1;
 for my $res (@reslist) {
-    warn sprintf "res %d: %s\n", $i++, $res->body_text;
+    d_log sprintf "res %d: %s\n", $i++, $res->body_text;
 
     for my $url (get_urls_from_body($res->body_text)) {
-        warn sprintf "url %d: %s\n", $j++, $url;
+        d_log sprintf "url %d: %s\n", $j++, $url;
 
         my $res = $ua->get($url);
         unless ($res->is_success) {
-            warn "GET $url: failed.\n";
+            d_log "GET $url: failed.\n";
             next;
         }
 
@@ -162,7 +162,7 @@ for my $res (@reslist) {
         my $filename = (split m{/}, $url)[-1];
         $filename = catfile($down_dir, $filename);
         my $FH = FileHandle->new($filename, 'w') or do {
-            warn "$filename: file open failed.\n";
+            d_log "$filename: file open failed.\n";
             next;
         };
         binmode $FH;
