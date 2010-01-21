@@ -129,7 +129,7 @@ log_set_quiet_flag($log_quiet);
 # Get dat data's response.
 my $dat_data = do {
     my $dat_url = get_dat_url($url);
-    log_out $dat_url;
+    log_out $dat_url->as_string;
 
     my $res = $ua->get($dat_url);
     unless ($res->is_success) {
