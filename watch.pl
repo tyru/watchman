@@ -100,7 +100,7 @@ my $log_remove_old;
 my $log_quiet;
 GetOptions(
     'd|down-dir=s' => \$down_dir,
-    'help' => \$needhelp,
+    'h|help|?' => \$needhelp,
     'u|user-agent=s' => \$user_agent,
     'l|log-file=s' => \$log_file,
     'r|remove-old-log' => \$log_remove_old,
