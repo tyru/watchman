@@ -10,6 +10,8 @@ use URI;
 use File::Spec::Functions qw(catfile);
 use LWP::UserAgent;
 use URI::Find;
+use IO::Handle;
+use FileHandle;
 
 # TODO
 # - オプション
