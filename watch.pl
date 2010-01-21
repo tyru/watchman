@@ -48,19 +48,6 @@ sub get_dat_url {
     $url;
 }
 
-sub get_dat {
-    my ($ua, $url) = @_;
-
-    my $dat_url = get_dat_url($url);
-    warn $dat_url;
-
-    my $res = $ua->get($dat_url);
-    unless ($res->is_success) {
-        die "GET $dat_url: failed.\n";
-    }
-    $res;
-}
-
 sub get_urls_from_body {
     my ($body) = @_;
 
@@ -95,18 +82,37 @@ mkdir $down_dir;
 my $ua = LWP::UserAgent->new;
 $ua->agent($user_agent);
 
-my $dat_response = get_dat($ua, $url);
 
-my $tempdir = '/tmp/XXX';
-my $o = WWW::2ch->new(
-    url => $url,
-    # TODO
-    # cache => catfile(mktemp($tempdir), ''),
-);
+# Get dat data's response.
+my $dat_data = do {
+    my $dat_url = get_dat_url($url);
+    warn $dat_url;
 
-my $dat = $o->parse_dat($dat_response->content);
+    my $res = $ua->get($dat_url);
+    unless ($res->is_success) {
+        die "GET $dat_url: failed.\n";
+    }
+    $res->content;
+};
+
+
+# Get 2ch res's list.
+my @reslist = do {
+    my $tempdir = '/tmp/XXX';
+    my $o = WWW::2ch->new(
+        url => $url,
+        # TODO
+        # cache => catfile(mktemp($tempdir), ''),
+    );
+
+    my $dat = $o->parse_dat($dat_data);
+    ($dat->reslist);
+};
+
+
+# Save images.
 my $i = my $j = 1;
-for my $res ($dat->reslist) {
+for my $res (@reslist) {
     warn sprintf "res %d: %s\n", $i++, $res->body_text;
 
     for my $url (get_urls_from_body($res->body_text)) {
