@@ -43,8 +43,8 @@ sub d {
 
     sub log_out {
         return unless defined $LOG;
-        $LOG->print(@_);
-        print @_ unless $log_quiet;
+        $LOG->print(@_, "\n");
+        print(@_, "\n") unless $log_quiet;
     }
 
     sub log_setfile {
@@ -52,7 +52,7 @@ sub d {
         return unless defined $filename;
 
         $LOG = FileHandle->new($filename, $mode) or do {
-            log_out "can't open '$filename' as log file!:$!\n";
+            log_out "can't open '$filename' as log file!:$!";
             return;
         };
     }
@@ -158,14 +158,14 @@ my @reslist = do {
 # Save images.
 my $i = my $j = 1;
 for my $res (@reslist) {
-    log_out sprintf "res %d: %s\n", $i++, $res->body_text;
+    log_out sprintf "res %d: %s", $i++, $res->body_text;
 
     for my $url (get_urls_from_body($res->body_text)) {
-        log_out sprintf "url %d: %s\n", $j++, $url;
+        log_out sprintf "url %d: %s", $j++, $url;
 
         my $res = $ua->get($url);
         unless ($res->is_success) {
-            log_out "GET $url: failed.\n";
+            log_out "GET $url: failed.";
             next;
         }
 
@@ -176,12 +176,12 @@ for my $res (@reslist) {
         };
 
         if (-f $filename && !$overwrite) {
-            log_out "'$filename' already exists.\n";
+            log_out "'$filename' already exists.";
             next;
         }
 
         my $FH = FileHandle->new($filename, 'w') or do {
-            log_out "$filename: file open failed.\n";
+            log_out "$filename: file open failed.";
             next;
         };
         binmode $FH;
