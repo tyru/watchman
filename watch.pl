@@ -12,6 +12,7 @@ use LWP::UserAgent;
 use URI::Find;
 use IO::Handle;
 use FileHandle;
+use FindBin qw($Bin);
 
 # TODO
 # - オプション
@@ -41,6 +42,27 @@ sub d {
     local $Data::Dumper::Useqq = 1;
     Data::Dumper::Dumper(@_);
 }
+
+sub os {
+    my ($default, %specific) = @_;
+    exists $specific{$^O} ?
+        $specific{$^O}
+        : $default
+}
+
+
+
+my $DOWN_DIR = $ENV{WATCHMAN_DOWN_DIR} || $Bin;
+
+my $CONF_DIR = $ENV{WATCHMAN_CONF_DIR} || do {
+    my $home = catfile($ENV{HOME}, '.watchman');
+    my $mswin32 = catfile($Bin, 'watchman');
+    my $current = catfile($Bin, '.watchman');
+    os(
+        (exists $ENV{HOME} ? $home : $current),
+        MSWin32 => $mswin32,
+    );
+};
 
 
 
@@ -110,13 +132,13 @@ sub get_urls_from_body {
 
 
 ### main ###
-my $down_dir = 'down';
+my $down_dir = catfile($DOWN_DIR, 'down');
 my $user_agent = 'Mozilla/5.0';
 my $log_file;
 my $log_rewrite_old;
 my $log_quiet;
 my $overwrite;
-my $dat_file = './cache.dat';
+my $dat_file = catfile($DOWN_DIR, 'cache.dat');
 my $support_utf8_url;
 
 {
@@ -145,6 +167,7 @@ my $url = shift || usage;
 
 
 # Setup
+mkdir $DOWN_DIR;
 mkdir $down_dir;
 
 my $ua = LWP::UserAgent->new;
