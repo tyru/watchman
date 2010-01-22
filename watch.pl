@@ -122,19 +122,26 @@ sub get_ita_dat {
 }
 
 sub get_urls_from_body {
-    my ($body, $support_utf8_url) = @_;
+    my ($body, $support_utf8_url, $image_regex) = @_;
 
     # FIXME
     # Don't create URI::Find instance each time.
 
     my @image_url;
+    my $callback = sub {
+        my ($url) = @_;
+        if ($url =~ $image_regex) {
+            push @image_url, $url;
+        }
+    };
+
     my $finder = do {
         if ($support_utf8_url) {
             require URI::Find::UTF8;
-            URI::Find::UTF8->new(sub { push @image_url, shift });
+            URI::Find::UTF8->new($callback);
         }
         else {
-            URI::Find->new(sub { push @image_url, shift });
+            URI::Find->new($callback);
         }
     };
     $finder->find(\$body);
@@ -154,6 +161,16 @@ sub apply_conf {
     }
 }
 
+sub validate_regex {
+    my ($image_regex, $image_regex_flags) = @_;
+
+    # TODO check if $image_regex contains executable code.
+
+    if ($image_regex_flags =~ '[^gimosx]') {
+        die "regex flags contain invalid character(s).\n";
+    }
+}
+
 
 
 ### main ###
@@ -166,6 +183,8 @@ my $overwrite;
 my $dat_file = catfile($DOWN_DIR, 'cache.dat');
 my $read_dat_file;
 my $support_utf8_url;
+my $image_regex_flags = 'i';
+my $image_regex = qr/\.(?:jpg|png|gif)$/;
 
 {
     # Build option values as follows:
@@ -186,6 +205,8 @@ my $support_utf8_url;
             dat_file => \$dat_file,
             read_dat_file => \$read_dat_file,
             utf8_url => \$support_utf8_url,
+            regex_flags => \$image_regex_flags,
+            image_regex => \$image_regex,
         }
     );
 
@@ -201,6 +222,8 @@ my $support_utf8_url;
         'd|dat-file=s' => \$dat_file,
         'utf8-url!' => \$support_utf8_url,
         'D|read-dat-file!' => \$read_dat_file,
+        'F|regex-flags=s' => \$image_regex_flags,
+        'R|image-regex=s' => \$image_regex,
     ) or usage;
     usage   if $needhelp;
 }
@@ -246,6 +269,8 @@ my $decode_sjis = do {
     sub { $enc->decode(@_) };
 };
 
+validate_regex($image_regex, $image_regex_flags);
+
 
 my ($ita, $dat_number) = get_ita_dat($url);
 log_out '$ita = '.$ita;
@@ -290,10 +315,12 @@ my @reslist = do {
 
 # Save images.
 my $i = my $j = 1;
+$image_regex = eval sprintf "qr/%s/%s", $image_regex, $image_regex_flags;
+
 for my $res (@reslist) {
     log_out sprintf "res %d: %s", $i++, $encode->($decode_sjis->($res->body_text));
 
-    for my $url (get_urls_from_body($res->body_text, $support_utf8_url)) {
+    for my $url (get_urls_from_body($res->body_text, $support_utf8_url, $image_regex)) {
         log_out sprintf "url %d: %s", $j++, $url;
 
         my $res = $ua->get($url);
