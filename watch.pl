@@ -100,14 +100,6 @@ sub get_ita_dat {
     ($1, $2);
 }
 
-sub get_dat_url {
-    my ($url) = @_;
-    my ($ita, $dat) = get_ita_dat($url);
-    $url = URI->new($url);
-    $url->path("$ita/dat/$dat.dat");
-    $url;
-}
-
 sub get_urls_from_body {
     my ($body, $support_utf8_url) = @_;
 
@@ -213,15 +205,19 @@ if ($log_quiet) {
 
 
 # Get dat data's response.
-my $dat_data = do {
-    my $dat_url = get_dat_url($url);
+my ($dat_data, $ita, $dat) = do {
+    my ($ita, $dat) = get_ita_dat($url);
+
+    my $dat_url = URI->new($url);
+    $dat_url->path("$ita/dat/$dat.dat");
     log_out $dat_url->as_string;
 
     my $res = $ua->get($dat_url);
     unless ($res->is_success) {
         die "GET $dat_url: failed.\n";
     }
-    $res->content;
+
+    ($res->content, $ita, $dat);
 };
 
 
