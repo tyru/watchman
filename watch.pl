@@ -144,6 +144,7 @@ my $log_rewrite_old;
 my $log_quiet;
 my $overwrite;
 my $dat_file = catfile($DOWN_DIR, 'cache.dat');
+my $read_dat_file;
 my $support_utf8_url;
 
 {
@@ -163,6 +164,7 @@ my $support_utf8_url;
             quiet => \$log_quiet,
             force => \$overwrite,
             dat_file => \$dat_file,
+            read_dat_file => \$read_dat_file,
             utf8_url => \$support_utf8_url,
         }
     );
@@ -178,6 +180,7 @@ my $support_utf8_url;
         'f|force!' => \$overwrite,
         'd|dat-file=s' => \$dat_file,
         'utf8-url!' => \$support_utf8_url,
+        'D|read-dat-file!' => \$read_dat_file,
     ) or usage;
     usage   if $needhelp;
 }
@@ -205,21 +208,26 @@ if ($log_quiet) {
 }
 
 
+my ($ita, $dat_number) = get_ita_dat($url);
+log_out '$ita = '.$ita;
+log_out '$dat_number = '.$dat_number;
+
+
 # Get dat data's response.
-my ($dat_data, $ita, $dat) = do {
-    my ($ita, $dat) = get_ita_dat($url);
+my $dat_data;
+unless ($read_dat_file) {
+    $dat_data = do {
+        my $dat_url = URI->new($url);
+        $dat_url->path("$ita/dat/$dat_number.dat");
+        log_out $dat_url->as_string;
 
-    my $dat_url = URI->new($url);
-    $dat_url->path("$ita/dat/$dat.dat");
-    log_out $dat_url->as_string;
-
-    my $res = $ua->get($dat_url);
-    unless ($res->is_success) {
-        die "GET $dat_url: failed.\n";
-    }
-
-    ($res->content, $ita, $dat);
-};
+        my $res = $ua->get($dat_url);
+        unless ($res->is_success) {
+            die "GET $dat_url: failed.\n";
+        }
+        $res->content;
+    };
+}
 
 
 # Get 2ch res's list.
@@ -229,7 +237,14 @@ my @reslist = do {
         cache => $dat_file,
     );
 
-    my $dat = $o->parse_dat($dat_data);
+    my $dat = do {
+        if ($read_dat_file) {
+            $o->recall_dat($dat_number);
+        }
+        else {
+            $o->parse_dat($dat_data);
+        }
+    };
     ($dat->reslist);
 };
 
