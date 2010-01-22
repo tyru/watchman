@@ -219,7 +219,7 @@ unless ($read_dat_file) {
     $dat_data = do {
         my $dat_url = URI->new($url);
         $dat_url->path("$ita/dat/$dat_number.dat");
-        log_out $dat_url->as_string;
+        log_out "GET $dat_url";
 
         my $res = $ua->get($dat_url);
         unless ($res->is_success) {
@@ -280,6 +280,7 @@ for my $res (@reslist) {
         };
         binmode $FH;
         $FH->print($res->content);
+        log_out "save '$filename'.";
     }
 }
 __END__
