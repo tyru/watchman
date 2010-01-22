@@ -18,7 +18,6 @@ use YAML;
 # TODO
 # - オプション
 #   - datをチェックしにいく間隔
-#   - 真偽値だったら!をつける
 # - 保存されてないファイルのみダウンロード
 #   - 前回のdatファイルと比較して違ったら
 #     差分のみからURLを抽出、ダウンロード
@@ -185,10 +184,10 @@ my $support_utf8_url;
         'u|user-agent=s' => \$user_agent,
         'l|log-file=s' => \$log_file,
         'r|rewrite-old-log' => \$log_rewrite_old,
-        'q|quiet' => \$log_quiet,
-        'f|force' => \$overwrite,
+        'q|quiet!' => \$log_quiet,
+        'f|force!' => \$overwrite,
         'd|dat-file=s' => \$dat_file,
-        'utf8-url' => \$support_utf8_url,
+        'utf8-url!' => \$support_utf8_url,
     ) or usage;
     usage   if $needhelp;
 }
