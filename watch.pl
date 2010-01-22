@@ -13,6 +13,7 @@ use URI::Find;
 use IO::Handle;
 use FileHandle;
 use FindBin qw($Bin);
+use YAML;
 
 # TODO
 # - オプション
@@ -131,6 +132,20 @@ sub get_urls_from_body {
     @image_url;
 }
 
+sub apply_conf {
+    my ($conf_file, $opt) = @_;
+
+    return unless -f $conf_file;
+    my $conf_data = YAML::LoadFile($conf_file);
+    return unless defined $conf_data && ref $conf_data eq 'HASH';
+
+    while (my ($k, $v) = each %$conf_data) {
+        next unless exists $opt->{$k};
+        ${ $opt->{$k} } = $v;
+    }
+}
+
+
 
 ### main ###
 my $down_dir = catfile($DOWN_DIR, 'down');
@@ -147,6 +162,21 @@ my $support_utf8_url;
     # - Default
     # - Config file
     # - Arguments
+
+    my $conf_file = $ENV{WATCHMAN_CONF_FILE} || catfile($CONF_DIR, 'config');
+    apply_conf(
+        $conf_file,
+        {
+            down_dir => \$down_dir,
+            user_agent => \$user_agent,
+            log_file => \$log_file,
+            rewrite_old_log => \$log_rewrite_old,
+            quiet => \$log_quiet,
+            force => \$overwrite,
+            dat_file => \$dat_file,
+            utf8_url => \$support_utf8_url,
+        }
+    );
 
     my $needhelp;
     GetOptions(
