@@ -14,6 +14,7 @@ use IO::Handle;
 use FileHandle;
 use FindBin qw($Bin);
 use YAML;
+use Encode qw(find_encoding);
 
 # TODO
 # - オプション
@@ -59,6 +60,20 @@ my $CONF_DIR = $ENV{WATCHMAN_CONF_DIR} || do {
     my $current = catfile($Bin, '.watchman');
     os(
         (exists $ENV{HOME} ? $home : $current),
+        MSWin32 => $mswin32,
+    );
+};
+
+my $STDOUT_ENCODING = $ENV{WATCHMAN_STDOUT_ENCODING} || do {
+    my $mswin32 = 'cp932';
+    my $other = '';
+    if (exists $ENV{LANG}) {
+        my ($locale, $enc) = split /\./, $ENV{LANG};
+        $other = $enc if defined $enc;
+    }
+
+    os(
+        $other,
         MSWin32 => $mswin32,
     );
 };
@@ -207,6 +222,25 @@ if ($log_quiet) {
     log_set_path(devnull, $log_rewrite_old ? 'w' : 'a');
 }
 
+my $encode = do {
+    my $enc = find_encoding($STDOUT_ENCODING);
+
+    if (defined $enc) {
+        sub {
+            $enc->encode(@_)
+        };
+    }
+    else {
+        log_error "can't determine stdout encoding.";
+        log_error "so watchman will not encode output.";
+        sub { @_ };
+    }
+};
+my $decode_sjis = do {
+    my $enc = find_encoding('sjis');
+    sub { $enc->decode(@_) };
+};
+
 
 my ($ita, $dat_number) = get_ita_dat($url);
 log_out '$ita = '.$ita;
@@ -252,7 +286,7 @@ my @reslist = do {
 # Save images.
 my $i = my $j = 1;
 for my $res (@reslist) {
-    log_out sprintf "res %d: %s", $i++, $res->body_text;
+    log_out sprintf "res %d: %s", $i++, $encode->($decode_sjis->($res->body_text));
 
     for my $url (get_urls_from_body($res->body_text, $support_utf8_url)) {
         log_out sprintf "url %d: %s", $j++, $url;
