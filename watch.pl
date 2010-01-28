@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use utf8;
 
+# 2chの画像ダウンローダ。
+# 中途半端なところでやる気がなくなってしまったのでgistの方にうpしておく。
+
 use Getopt::Long;
 use Pod::Usage;
 use WWW::2ch;
