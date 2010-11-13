@@ -18,6 +18,8 @@ use FileHandle;
 use FindBin qw($Bin);
 use YAML;
 use Encode qw(find_encoding);
+use File::Temp qw/tempdir/;
+use File::Path qw/mkpath/;
 
 # TODO
 # - オプション
@@ -177,7 +179,7 @@ sub validate_regex {
 
 
 ### main ###
-my $down_dir = catfile($DOWN_DIR, 'down');
+my $down_dir = tempdir(DIR => catfile($DOWN_DIR, 'down'), CLEANUP => 0);
 my $user_agent = 'Mozilla/5.0';
 my $log_file;
 my $log_rewrite_old;
@@ -236,8 +238,8 @@ my $url = shift || usage;
 
 
 # Setup
-mkdir $DOWN_DIR;
-mkdir $down_dir;
+mkpath $DOWN_DIR;
+mkpath $down_dir;
 
 my $ua = LWP::UserAgent->new;
 $ua->agent($user_agent);
